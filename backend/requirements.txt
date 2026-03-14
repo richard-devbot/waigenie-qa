@@ -13,3 +13,5 @@ python-multipart>=0.0.9
 requests
 uvicorn[standard]==0.24.0
 pathvalidate
+agno>=1.7.0
+lancedb>=0.14.0

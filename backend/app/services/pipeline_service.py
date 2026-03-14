@@ -234,7 +234,10 @@ class PipelineService:
             results['generated_code'] = code_response
             
             logger.info(f"Task {task_id}: Pipeline completed successfully")
-            
+
+            # Trigger self-evolution asynchronously (don't block pipeline response)
+            asyncio.create_task(self._run_evolution(task_id, results, context))
+
             # Final completion update with structured data for frontend
             self.task_manager.set_task_status(
                 task_id,
@@ -648,6 +651,15 @@ class PipelineService:
                 # If serialization fails, convert to string representation
                 result.append(str(item))
         return result
+
+    async def _run_evolution(self, task_id: str, results: dict, url: str = ""):
+        """Run self-evolution after successful pipeline completion."""
+        try:
+            from app.intelligence.evolution import evolve_from_run
+            evolution_summary = await evolve_from_run(results, url=url or "")
+            logger.info(f"Task {task_id}: Evolution complete - {evolution_summary}")
+        except Exception as e:
+            logger.warning(f"Task {task_id}: Evolution failed (non-critical): {e}")
 
     def get_pipeline_status(self, task_id: str) -> Dict[str, Any]:
         """Get the current status of a pipeline task."""

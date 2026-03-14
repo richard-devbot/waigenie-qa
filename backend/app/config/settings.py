@@ -18,6 +18,13 @@ class Settings(BaseSettings):
     JIRA_USERNAME: Optional[str] = None
     JIRA_TOKEN: Optional[str] = None
     
+    # Intelligence / Memory
+    MEMORY_DB_FILE: str = "./waigenie_memory.db"
+    LANCEDB_URI: str = "./waigenie_knowledge"
+
+    # Ollama
+    OLLAMA_BASE_URL: str = "http://localhost:11434"
+
     # Database
     DATABASE_URL: str = "sqlite:///./sdet_genie.db"
     

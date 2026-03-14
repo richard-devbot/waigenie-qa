@@ -18,6 +18,13 @@ from browser_use import ChatOpenAI
 from browser_use import ChatAnthropic
 from browser_use import ChatGroq
 
+try:
+    from agno.models.ollama import Ollama as AgnoOllama
+    from browser_use import ChatOllama
+    _ollama_available = True
+except ImportError:
+    _ollama_available = False
+
 SUPPORTED_MODELS = {
     "Google": {
         "api_key_env": "GOOGLE_API_KEY",
@@ -49,6 +56,16 @@ SUPPORTED_MODELS = {
             "meta-llama/llama-3.1-8b-instant": {"agno_class": AgnoGroq, "browser_use_class": ChatGroq, "param_name": "id"},
         },
     },
+    "Ollama": {
+        "api_key_env": None,  # No API key needed
+        "models": {
+            "llama3.2": {"agno_class": None, "browser_use_class": None, "param_name": "id"},
+            "gemma3": {"agno_class": None, "browser_use_class": None, "param_name": "id"},
+            "qwen2.5": {"agno_class": None, "browser_use_class": None, "param_name": "id"},
+            "codellama": {"agno_class": None, "browser_use_class": None, "param_name": "id"},
+            "mistral": {"agno_class": None, "browser_use_class": None, "param_name": "id"},
+        },
+    },
 }
 
 def get_llm_instance(provider: str, model_name: str, for_agno: bool = True) -> Optional[Union[object, Any]]:
@@ -70,7 +87,22 @@ def get_llm_instance(provider: str, model_name: str, for_agno: bool = True) -> O
     
     if provider_key not in SUPPORTED_MODELS:
         raise ValueError(f"Unsupported provider: {provider_key}")
-        
+
+    # Ollama special case — no API key required
+    if provider_key == "Ollama":
+        base_url = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
+        try:
+            if for_agno:
+                from agno.models.ollama import Ollama as AgnoOllama
+                return AgnoOllama(id=model_name, base_url=base_url)
+            else:
+                from browser_use import ChatOllama
+                return ChatOllama(model=model_name, base_url=base_url)
+        except ImportError:
+            raise ValueError("Ollama support requires: pip install ollama")
+        except Exception as e:
+            raise Exception(f"Failed to init Ollama '{model_name}': {e}")
+
     model_info = SUPPORTED_MODELS[provider_key]["models"].get(model_name)
     if not model_info:
         raise ValueError(f"Unsupported model '{model_name}' for provider '{provider_key}'")
