@@ -3,6 +3,7 @@ from app.utils.model_factory import get_llm_instance
 from textwrap import dedent
 # Import the utility function to load instructions
 from app.prompts.prompt_utils import load_agent_instructions
+from app.models.agent_outputs import GherkinFeature
 
 def create_gherkin_agent(model_provider: str = "Google", model_name: str = "gemini-2.0-flash"):
     """
@@ -44,29 +45,7 @@ def create_gherkin_agent(model_provider: str = "Google", model_name: str = "gemi
         #         add_few_shot=True,
         #     ),
         # ],
-        expected_output=dedent("""\
-        [
-          {
-            "title": "Scenario Title",
-            "tags": ["@tag1", "@tag2"],
-            "feature": "User Story Automation",
-            "given": "Pre-conditions or initial context with specific details - MUST include an entry point URL in the first step using format: 'I am on \"[full URL]\"'",
-            "when": "The action or event with specific element names if applicable",
-            "then": "The expected outcome with specific verification points",
-            "and": ["Additional step 1 with specific details", "Additional step 2 with specific details"],
-            "but": "Exception or alternative outcome with specific details",
-            "background": "Shared preconditions for multiple scenarios (if applicable)",
-            "examples": [
-              {
-                "example_1": "value_1",
-                "example_2": "value_2"
-              }
-            ],
-            "entry_point_url": "The full URL where the test scenario begins"
-          }
-        ]
-        Return ONLY the JSON array of Gherkin scenarios, adhering to the specified structure. Ensure each field is populated with meaningful, detailed content that follows Gherkin best practices. The 'given' field MUST include an entry point URL in the first step. DO NOT wrap the JSON in markdown code blocks or any other formatting. Return only the raw JSON array.
-        """),
+        response_model=GherkinFeature,
     )
     
     return agent
