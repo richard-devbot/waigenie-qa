@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import Optional, Tuple
 from app.services.pipeline_service import pipeline_service
 from app.workflows.qa_pipeline import QAPipeline
+from app.agents.orchestrator import create_qa_orchestrator
 
 router = APIRouter()
 
@@ -90,6 +91,39 @@ async def start_workflow_pipeline(request: PipelineStartRequest):
         model=request.model,
     )
     return {"status": "completed", "data": final}
+
+
+@router.post("/orchestrate")
+async def start_orchestrated_pipeline(request: PipelineStartRequest):
+    """
+    Start pipeline using Agno Team coordinate mode orchestrator (Issue #25).
+    Delegates to StoryForge, TestCraft, GherkinGen, and CodeSmith specialist agents.
+    """
+    try:
+        team = create_qa_orchestrator(
+            provider=request.provider or "Google",
+            model=request.model or "gemini-2.0-flash",
+        )
+    except Exception as e:
+        return {"status": "error", "error": f"Failed to create orchestrator: {str(e)}", "data": {}}
+
+    prompt = f"""
+User Story: {request.raw_story}
+Framework: {request.framework}
+Context: {request.context or 'No additional context'}
+
+Please run the full QA pipeline and return all artifacts.
+"""
+    try:
+        response = team.run(prompt)
+    except Exception as e:
+        return {"status": "error", "error": str(e), "data": {}}
+
+    content = response.content if hasattr(response, "content") else str(response)
+    return {
+        "status": "completed",
+        "data": content if isinstance(content, dict) else {"raw": str(content)},
+    }
 
 
 # New endpoint to get detailed status
