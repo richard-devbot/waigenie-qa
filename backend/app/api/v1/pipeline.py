@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional, Tuple
 from app.services.pipeline_service import pipeline_service
+from app.workflows.qa_pipeline import QAPipeline
 
 router = APIRouter()
 
@@ -76,6 +77,20 @@ async def get_pipeline_status(task_id: str):
     
     # Return the entire task object to ensure frontend receives all results
     return task
+
+@router.post("/workflow")
+async def start_workflow_pipeline(request: PipelineStartRequest):
+    """Start pipeline using Agno Workflow 2.0 with parallel stages 2+3."""
+    pipeline = QAPipeline()
+    final = pipeline.run(
+        raw_story=request.raw_story,
+        framework=request.framework,
+        context=request.context,
+        provider=request.provider,
+        model=request.model,
+    )
+    return {"status": "completed", "data": final}
+
 
 # New endpoint to get detailed status
 @router.get("/detailed-status/{task_id}")
