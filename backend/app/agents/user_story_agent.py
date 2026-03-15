@@ -4,6 +4,7 @@ from typing import List, Optional
 from app.utils.model_factory import get_llm_instance
 # Import the utility function to load instructions
 from app.prompts.prompt_utils import load_agent_instructions
+from app.models.agent_outputs import EnhancedStory
 
 def create_user_story_enhancement_agent(model_provider: str = "Google", model_name: str = "gemini-2.0-flash") -> Agent:
     """Create the User Story Enhancement Agent with proper configuration."""
@@ -52,41 +53,7 @@ def create_user_story_enhancement_agent(model_provider: str = "Google", model_na
         """),
         instructions=instructions,
         tools=jira_tools,  # Initialize with JiraTools if environment variables are set, otherwise empty list
-        expected_output=dedent("""\
-        # User Story: [Brief Title]
-
-        ## Story Definition
-        As a [specific user type/role],
-        I want [clear intention or capability],
-        So that [explicit value or benefit received].
-
-        ## Story Elaboration
-        [Additional context, clarification, and business value explanation with specific details]
-
-        ## Acceptance Criteria
-        1. [Clear, testable criterion 1 with specific details]
-        2. [Clear, testable criterion 2 with specific details]
-        3. [Clear, testable criterion 3 with specific details]
-        4. [Additional criteria as needed with specific details]
-
-        ## Implementation Notes
-        - [Technical consideration 1 with specific details]
-        - [Technical consideration 2 with specific details]
-        - [Additional notes as needed with specific details]
-
-        ## Testability Considerations
-        - [How to test this feature effectively]
-        - [Key elements to verify]
-        - [Potential edge cases to consider]
-
-        ## Attachments/References
-        - [Any mockups, designs, or related documents with specific links if available]
-        - [Links to relevant specifications with specific URLs if available]
-
-        ## Related Stories/Epics
-        - [Parent epic or related stories with specific IDs if available]
-        """)
-        # Note: Return the enhanced user story in the exact format shown above without any additional text or formatting.,
+        response_model=EnhancedStory,
     )
     
     return agent
