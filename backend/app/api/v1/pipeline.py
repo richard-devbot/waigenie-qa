@@ -1,3 +1,5 @@
+import asyncio
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional, Tuple
@@ -82,13 +84,16 @@ async def get_pipeline_status(task_id: str):
 @router.post("/workflow")
 async def start_workflow_pipeline(request: PipelineStartRequest):
     """Start pipeline using Agno Workflow 2.0 with parallel stages 2+3."""
+    provider = request.provider or "Google"
+    model = request.model or "gemini-2.0-flash"
     pipeline = QAPipeline()
-    final = pipeline.run(
+    final = await asyncio.to_thread(
+        pipeline.run,
         raw_story=request.raw_story,
         framework=request.framework,
         context=request.context,
-        provider=request.provider,
-        model=request.model,
+        provider=provider,
+        model=model,
     )
     return {"status": "completed", "data": final}
 
@@ -115,7 +120,7 @@ Context: {request.context or 'No additional context'}
 Please run the full QA pipeline and return all artifacts.
 """
     try:
-        response = team.run(prompt)
+        response = await asyncio.to_thread(team.run, prompt)
     except Exception as e:
         return {"status": "error", "error": str(e), "data": {}}
 

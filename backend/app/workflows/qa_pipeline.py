@@ -37,7 +37,7 @@ def _build_story_step(provider: str, model: str, raw_story: str):
         story = step_input.get_input_as_string() or raw_story
         agent = create_user_story_enhancement_agent(provider, model)
         resp = agent.run(story)
-        raw = resp.content
+        raw = resp.content if (resp is not None and hasattr(resp, "content")) else resp
         if isinstance(raw, EnhancedStory):
             enhanced = raw
         elif isinstance(raw, dict):
@@ -68,7 +68,7 @@ def _build_test_case_step(provider: str, model: str, context: Optional[str]):
             story_text = f"{story_text}\n\nContext: {context}"
         agent = create_test_case_agent(provider, model)
         resp = agent.run(story_text)
-        raw = resp.content
+        raw = resp.content if (resp is not None and hasattr(resp, "content")) else resp
         if isinstance(raw, TestCaseList):
             result = raw
         elif isinstance(raw, dict):
@@ -104,7 +104,7 @@ def _build_gherkin_step(provider: str, model: str, context: Optional[str]):
             story_text = f"{story_text}\n\nContext: {context}"
         agent = create_gherkin_agent(provider, model)
         resp = agent.run(story_text)
-        raw = resp.content
+        raw = resp.content if (resp is not None and hasattr(resp, "content")) else resp
         if isinstance(raw, GherkinFeature):
             result = raw
         elif isinstance(raw, dict):
