@@ -4,6 +4,7 @@ from textwrap import dedent
 # Import the utility function to load instructions
 from app.prompts.prompt_utils import load_agent_instructions
 from app.models.agent_outputs import GherkinFeature
+from agno.tools.reasoning import ReasoningTools
 
 def create_gherkin_agent(model_provider: str = "Google", model_name: str = "gemini-2.0-flash"):
     """
@@ -37,14 +38,9 @@ def create_gherkin_agent(model_provider: str = "Google", model_name: str = "gemi
         definitions that translate well into browser automation commands.
         """),
         instructions=instructions,
-        # tools=[
-        #     ReasoningTools(
-        #         think=True,
-        #         analyze=True,
-        #         add_instructions=True,
-        #         add_few_shot=True,
-        #     ),
-        # ],
+        tools=[
+            ReasoningTools(think=True, analyze=True, add_instructions=True),
+        ],
         response_model=GherkinFeature,
     )
     
