@@ -6,6 +6,10 @@ class Settings(BaseSettings):
     BACKEND_HOST: str = "localhost"
     BACKEND_PORT: int = 8000
     DEBUG: bool = True
+
+    # Security
+    SECRET_KEY: str = "dev-secret-change-in-production"
+    API_KEY_REQUIRED: bool = False
     
     # LLM API Keys
     GOOGLE_API_KEY: Optional[str] = None

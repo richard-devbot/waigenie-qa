@@ -1,4 +1,3 @@
-import traceback
 from typing import Dict, Any, Optional
 import uuid
 import asyncio
@@ -271,9 +270,8 @@ class PipelineService:
             )
             
         except Exception as e:
-            logger.error(f"Pipeline failed with error: {str(e)}")
-            logger.error(traceback.format_exc())
-            
+            logger.error("Pipeline failed", exc_info=True)
+
             self.task_manager.set_task_status(
                 task_id,
                 "FAILED",
@@ -282,7 +280,6 @@ class PipelineService:
                     "current_stage": "FAILED",
                     "message": f"Pipeline failed: {str(e)}",
                     "error": str(e),
-                    "traceback": traceback.format_exc(),
                     "results": results  # Include partial results
                 }
             )

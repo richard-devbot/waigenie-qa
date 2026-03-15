@@ -1,13 +1,14 @@
 import asyncio
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from typing import Optional, Tuple
 from app.services.pipeline_service import pipeline_service
 from app.workflows.qa_pipeline import QAPipeline
 from app.agents.orchestrator import create_qa_orchestrator
+from app.api.deps import verify_api_key
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(verify_api_key)])
 
 class PipelineStartRequest(BaseModel):
     raw_story: str
@@ -35,10 +36,10 @@ class PipelineStatusResponse(BaseModel):
 async def start_pipeline(request: PipelineStartRequest):
     """
     Start the end-to-end pipeline process.
-    
+
     Args:
         request (PipelineStartRequest): The request containing user story and framework
-        
+
     Returns:
         PipelineStartResponse: The task ID for tracking the pipeline
     """
@@ -55,7 +56,7 @@ async def start_pipeline(request: PipelineStartRequest):
             vision_enabled=request.vision_enabled,
             cdp_port=request.cdp_port
         )
-        
+
         return PipelineStartResponse(
             task_id=task_id,
             message="Pipeline started successfully"
@@ -67,17 +68,17 @@ async def start_pipeline(request: PipelineStartRequest):
 async def get_pipeline_status(task_id: str):
     """
     Get the current status of a pipeline task.
-    
+
     Args:
         task_id (str): The task ID to check
-        
+
     Returns:
         Dict: The complete task object with all data including results
     """
     task = pipeline_service.get_pipeline_status(task_id)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
-    
+
     # Return the entire task object to ensure frontend receives all results
     return task
 
@@ -136,15 +137,15 @@ Please run the full QA pipeline and return all artifacts.
 async def get_detailed_pipeline_status(task_id: str):
     """
     Get the detailed status of a pipeline task.
-    
+
     Args:
         task_id (str): The task ID to check
-        
+
     Returns:
         Dict: The detailed task status information
     """
     task = pipeline_service.get_pipeline_status(task_id)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
-    
+
     return task
