@@ -3,6 +3,7 @@ from app.utils.model_factory import get_llm_instance
 from textwrap import dedent
 # Import the utility function to load instructions
 from app.prompts.prompt_utils import load_agent_instructions
+from app.models.agent_outputs import GeneratedCode
 
 def create_code_generation_agent(model_provider: str = "Google", model_name: str = "gemini-2.0-flash"):
     """
@@ -36,25 +37,7 @@ def create_code_generation_agent(model_provider: str = "Google", model_name: str
         and following framework-specific patterns like Page Object Model.
         """),
         instructions=instructions,
-        expected_output=dedent("""
-        ```[language_or_framework]
-        # [Feature Description]
-        # Generated test automation code following production standards
-        # Framework: [Selenium/Playwright/Cypress/Robot/Java]
-        # Date: [Generated timestamp]
-
-        # [Complete, executable automation code with proper structure]
-        # - All necessary imports
-        # - Page object definitions
-        # - Test implementations
-        # - Helper methods
-        # - Error handling
-        # - Configuration
-        ```
-        
-        Return ONLY the complete code block with proper syntax highlighting.
-        Use the enhanced element tracking data to create robust, production-ready automation scripts.
-        """),
+        response_model=GeneratedCode,
     )
     
     return agent

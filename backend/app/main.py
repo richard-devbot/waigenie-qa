@@ -1,4 +1,6 @@
 import asyncio
+import logging
+import os
 import sys
 import platform
 from fastapi import FastAPI
@@ -8,20 +10,35 @@ from contextlib import asynccontextmanager
 from app.api.v1 import api_router
 from app.config.settings import settings
 
-# Set event loop policy for Windows to avoid subprocess issues
+logger = logging.getLogger(__name__)
+
+# Set event loop policy for Windows to avoid subprocess issues (centralised here only)
 if platform.system() == "Windows":
     if sys.version_info >= (3, 8):
         asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
     else:
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
+
+def _get_allowed_origins() -> list[str]:
+    """Read allowed CORS origins from ALLOWED_ORIGINS env var (comma-separated).
+    Falls back to localhost dev origins only — never a wildcard with credentials.
+    """
+    env_origins = os.getenv("ALLOWED_ORIGINS", "")
+    if env_origins.strip():
+        return [o.strip() for o in env_origins.split(",") if o.strip()]
+    return [
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3000",
+    ]
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup logic
-    print("Starting SDET-GENIE backend...")
+    logger.info("Starting SDET-GENIE backend...")
     yield
-    # Shutdown logic
-    print("Shutting down SDET-GENIE backend...")
+    logger.info("Shutting down SDET-GENIE backend...")
 
 def create_app() -> FastAPI:
     app = FastAPI(
@@ -30,11 +47,11 @@ def create_app() -> FastAPI:
         version="1.0.0",
         lifespan=lifespan
     )
-    
-    # Add CORS middleware
+
+    allowed_origins = _get_allowed_origins()
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],  # In production, specify exact origins
+        allow_origins=allowed_origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

@@ -1,5 +1,6 @@
 from typing import Dict, Any, Optional, List
 from app.agents.code_generation_agent import create_code_generation_agent
+from app.models.agent_outputs import GeneratedCode
 import json
 import re
 
@@ -117,14 +118,26 @@ class CodeGenerationService:
 
         # Run the agent
         response = agent.run(input_text)
-        
-        # Extract code from the response
-        code = self._extract_code_from_response(response)
-        
+
+        # Extract structured output from the response
+        raw = response.content if hasattr(response, 'content') else response
+        if isinstance(raw, GeneratedCode):
+            result = raw
+        elif isinstance(raw, dict):
+            result = GeneratedCode(**raw)
+        else:
+            # Fallback: raw string is code
+            result = GeneratedCode(
+                framework=framework,
+                code=str(raw) if raw else "",
+            )
+
         return {
             "data": {
-                "code": code,
-                "framework": framework
+                "code": result.code,
+                "framework": result.framework,
+                "language": result.language,
+                "file_name": result.file_name,
             },
             "metadata": {
                 "gherkin_steps": gherkin_steps,

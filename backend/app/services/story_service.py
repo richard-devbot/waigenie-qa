@@ -2,6 +2,7 @@ from typing import Dict, Any, Optional
 from app.agents.user_story_agent import create_user_story_enhancement_agent
 from app.utils.model_factory import get_llm_instance
 from app.config.settings import Settings
+from app.models.agent_outputs import EnhancedStory
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import re
@@ -51,20 +52,28 @@ class StoryService:
                     raw_story
                 )
             
-            # Extract the content from the response
-            if hasattr(run_response, 'content'):
-                enhanced_story = run_response.content
+            # Extract structured output from the response
+            raw = run_response.content if hasattr(run_response, 'content') else run_response
+            if isinstance(raw, EnhancedStory):
+                story = raw
+            elif isinstance(raw, dict):
+                story = EnhancedStory(**raw)
             else:
-                enhanced_story = str(run_response)
-            
-            # Process the enhanced story with minimal parsing
-            parsed_story = self._parse_enhanced_story(enhanced_story)
-            
+                # String fallback — try to extract JSON or use as text
+                story = EnhancedStory(
+                    title="Enhanced Story",
+                    as_a="user",
+                    i_want="to complete the described task",
+                    so_that="I can achieve the stated goal",
+                    elaboration=str(raw) if raw else "",
+                    acceptance_criteria=[],
+                )
+
             return {
                 "data": {
-                    "enhanced_story": enhanced_story,
-                    "parsed_story": parsed_story,
-                    "raw_markdown": enhanced_story  # Include raw markdown directly
+                    "enhanced_story": f"As a {story.as_a}, I want {story.i_want}, so that {story.so_that}.\n\n{story.elaboration}",
+                    "parsed_story": story.model_dump(),
+                    "acceptance_criteria": story.acceptance_criteria,
                 },
                 "metadata": {
                     "provider": provider,

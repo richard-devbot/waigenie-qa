@@ -40,11 +40,11 @@ async def generate_automation_code(request: CodeGenerationRequest):
         )
         
         return CodeGenerationResponse(
-            code=result["code"],
-            gherkin_steps=result["gherkin_steps"],
-            framework=result["framework"],
-            provider=result["provider"],
-            model=result["model"]
+            code=result["data"]["code"],
+            gherkin_steps=result["metadata"]["gherkin_steps"],
+            framework=result["data"].get("framework", request.framework),
+            provider=result["metadata"].get("provider", request.provider),
+            model=result["metadata"].get("model", request.model),
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to generate automation code: {str(e)}")

@@ -1,5 +1,6 @@
 from typing import List, Dict, Any, Optional
 from app.agents.test_case_agent import create_test_case_agent
+from app.models.agent_outputs import TestCaseList, TestCase
 import json
 import re
 
@@ -46,13 +47,28 @@ class TestCaseService:
         
         # Run the agent
         response = agent.run(input_text)
-        
-        # Extract test cases from the response
-        test_cases = self._extract_test_cases_from_response(response)
-        
+
+        # Extract structured output from the response
+        raw = response.content if hasattr(response, 'content') else response
+        if isinstance(raw, TestCaseList):
+            result = raw
+        elif isinstance(raw, dict):
+            result = TestCaseList(**raw)
+        else:
+            # Parse JSON string fallback
+            try:
+                data = json.loads(str(raw))
+                if isinstance(data, list):
+                    result = TestCaseList(test_cases=[TestCase(**tc) if isinstance(tc, dict) else tc for tc in data])
+                else:
+                    result = TestCaseList(test_cases=[])
+            except Exception:
+                result = TestCaseList(test_cases=[])
+
         return {
             "data": {
-                "test_cases": test_cases
+                "test_cases": [tc.model_dump() for tc in result.test_cases],
+                "test_count": result.total_count,
             },
             "metadata": {
                 "user_story": user_story,

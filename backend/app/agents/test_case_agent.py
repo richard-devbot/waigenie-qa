@@ -3,6 +3,8 @@ from app.utils.model_factory import get_llm_instance
 from textwrap import dedent
 # Import the utility function to load instructions
 from app.prompts.prompt_utils import load_agent_instructions
+from app.models.agent_outputs import TestCaseList
+from agno.tools.reasoning import ReasoningTools
 
 def create_test_case_agent(model_provider: str = "Google", model_name: str = "gemini-2.0-flash"):
     """
@@ -57,41 +59,11 @@ def create_test_case_agent(model_provider: str = "Google", model_name: str = "ge
         identification strategies and data-driven testing approaches.
         """),
         instructions=instructions,
-        # tools=[ # Keep tools commented out unless explicitly needed for this agent's function
-        #     ReasoningTools(
-        #         think=True,
-        #         analyze=True,
-        #         add_instructions=True,
-        #         add_few_shot=True,
-        #     ),
-        # ],
-        expected_output=dedent("""
-        [
-          {
-            "id": "TC_US_001_01",
-            "title": "Test Case Title",
-            "description": "Detailed description of what this test case verifies",
-            "pre_conditions": "Pre-conditions for the test",
-            "steps": [
-              "Step 1: Action description with specific element names if applicable",
-              "Step 2: Action description with specific element names if applicable"
-            ],
-            "expected_results": [
-              "Expected result for step 1 with specific verification points",
-              "Expected result for step 2 with specific verification points"
-            ],
-            "test_data": "Any specific data needed with format examples if applicable",
-            "priority": "High/Medium/Low",
-            "test_type": "Functional/Non-functional/UI/API/Integration/etc.",
-            "status": "Not Executed",
-            "post_conditions": "Any cleanup or system state expected after execution",
-            "environment": "Environment requirements for test execution",
-            "automation_status": "Not Automated/Automated/In Progress"
-          }
-        ]
-        Return ONLY the JSON array of test cases, adhering to the specified structure. Ensure each field is populated with meaningful, detailed content. DO NOT wrap the JSON in markdown code blocks or any other formatting. Return only the raw JSON array.
-        """),
-        tools=jira_tools,
+        tools=[
+            *jira_tools,
+            ReasoningTools(think=True, analyze=True, add_instructions=True),
+        ],
+        response_model=TestCaseList,
     )
     
     return agent

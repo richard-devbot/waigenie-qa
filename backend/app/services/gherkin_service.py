@@ -1,5 +1,6 @@
 from typing import List, Dict, Any, Optional
 from app.agents.gherkin_agent import create_gherkin_agent
+from app.models.agent_outputs import GherkinFeature, GherkinScenario
 import json
 import re
 
@@ -49,13 +50,29 @@ class GherkinService:
         
         # Run the agent
         response = agent.run(input_text)
-        
-        # Extract Gherkin scenarios from the response
-        scenarios = self._extract_scenarios_from_response(response)
-        
+
+        # Extract structured output from the response
+        raw = response.content if hasattr(response, 'content') else response
+        if isinstance(raw, GherkinFeature):
+            result = raw
+        elif isinstance(raw, dict):
+            result = GherkinFeature(**raw)
+        else:
+            try:
+                data = json.loads(str(raw))
+                if isinstance(data, list):
+                    result = GherkinFeature(scenarios=[GherkinScenario(**s) if isinstance(s, dict) else s for s in data])
+                else:
+                    result = GherkinFeature(scenarios=[])
+            except Exception:
+                result = GherkinFeature(scenarios=[])
+
+        scenarios_raw = [s.model_dump(by_alias=True) for s in result.scenarios]
+
         return {
             "data": {
-                "scenarios": scenarios
+                "scenarios": scenarios_raw,
+                "scenario_count": result.scenario_count,
             },
             "metadata": {
                 "test_cases_count": len(manual_test_cases),
