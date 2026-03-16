@@ -1,11 +1,27 @@
 from pydantic_settings import BaseSettings
+from pydantic import model_validator
 from typing import Optional
+
+_DEFAULT_SECRET_KEY = "dev-secret-change-in-production"
 
 class Settings(BaseSettings):
     # API Configuration
     BACKEND_HOST: str = "localhost"
     BACKEND_PORT: int = 8000
     DEBUG: bool = True
+
+    # Security
+    SECRET_KEY: str = _DEFAULT_SECRET_KEY
+    API_KEY_REQUIRED: bool = False
+
+    @model_validator(mode="after")
+    def validate_secret_key(self) -> "Settings":
+        if self.API_KEY_REQUIRED and self.SECRET_KEY == _DEFAULT_SECRET_KEY:
+            raise ValueError(
+                "SECRET_KEY must be changed from the default value when API_KEY_REQUIRED=True. "
+                "Set SECRET_KEY in your .env file."
+            )
+        return self
     
     # LLM API Keys
     GOOGLE_API_KEY: Optional[str] = None
@@ -24,6 +40,10 @@ class Settings(BaseSettings):
 
     # Ollama
     OLLAMA_BASE_URL: str = "http://localhost:11434"
+
+    # Confidential mode - forces all LLM calls through local Ollama
+    CONFIDENTIAL_MODE: bool = False
+    CONFIDENTIAL_MODEL: str = "llama3.2"
 
     # Database
     DATABASE_URL: str = "sqlite:///./sdet_genie.db"

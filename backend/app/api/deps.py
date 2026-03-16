@@ -1,28 +1,22 @@
-from fastapi import Depends, HTTPException, status
-from typing import Generator
-import os
+import secrets
+from fastapi import Header, HTTPException, status
 from app.config.settings import settings
+
 
 def get_settings():
     return settings
 
-def verify_api_key(provider: str) -> Generator[None, None, None]:
+
+async def verify_api_key(x_api_key: str = Header(default="")) -> None:
     """
-    Dependency to verify API key is set for the specified provider
+    FastAPI dependency to verify the X-API-Key request header.
+    When settings.API_KEY_REQUIRED is False (default for dev), the check is skipped.
+    Uses secrets.compare_digest to prevent timing-based attacks.
     """
-    api_key_map = {
-        "Google": settings.GOOGLE_API_KEY,
-        "OpenAI": settings.OPENAI_API_KEY,
-        "Anthropic": settings.ANTHROPIC_API_KEY,
-        "Groq": settings.GROQ_API_KEY
-    }
-    
-    api_key = api_key_map.get(provider)
-    if not api_key:
+    if not settings.API_KEY_REQUIRED:
+        return
+    if not secrets.compare_digest(x_api_key, settings.SECRET_KEY):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"API key for {provider} not configured"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid API key"
         )
-    
-    # Additional validation could be added here
-    yield

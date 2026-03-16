@@ -1,7 +1,7 @@
 """Structured Pydantic output models for all 5 WAIGenie agents (Issue #22)."""
 from __future__ import annotations
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Union
 
 
 # ── P1-1a: UserStory Agent ──────────────────────────────────────────────────
@@ -38,6 +38,10 @@ class TestCase(BaseModel):
     post_conditions: str = ""
     environment: str = ""
     automation_status: str = "Not Automated"
+    user_story_id: str = ""
+    acceptance_criterion_ref: str = ""
+    tags: List[str] = Field(default_factory=list)
+    severity: str = "Medium"
 
 class TestCaseList(BaseModel):
     test_cases: List[TestCase]
@@ -54,9 +58,9 @@ class GherkinScenario(BaseModel):
     title: str
     tags: List[str] = Field(default_factory=list)
     feature: str = ""
-    given: str = ""
-    when: str = ""
-    then: str = ""
+    given: List[str] = Field(default_factory=list)
+    when: List[str] = Field(default_factory=list)
+    then: List[str] = Field(default_factory=list)
     and_steps: List[str] = Field(default_factory=list, alias="and")
     but: str = ""
     background: str = ""

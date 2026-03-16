@@ -203,4 +203,33 @@ Return a `GherkinFeature` JSON object containing:
 - `feature_name`: the Feature: title
 - `scenarios`: array of `GherkinScenario` objects, one per scenario/outline
 
+Each `GherkinScenario` must use **arrays of strings** for all step fields:
+
+```json
+{
+  "title": "Registered user signs in with valid credentials",
+  "tags": ["@TC_LOGIN_AC1_01", "@P0", "@smoke", "@authentication"],
+  "feature": "User Authentication",
+  "given": [
+    "I am on \"https://staging.app.com/login\"",
+    "the user \"qa_test@example.com\" has an active account"
+  ],
+  "when": [
+    "I sign in with email \"qa_test@example.com\" and password \"P@ssw0rd123!\""
+  ],
+  "then": [
+    "I should be redirected to \"https://staging.app.com/dashboard\"",
+    "I should see the text \"Welcome back, Test User\" in the page header"
+  ],
+  "and": [],
+  "but": "",
+  "entry_point_url": "https://staging.app.com/login"
+}
+```
+
+**Schema rules:**
+- `given`, `when`, `then` — always arrays of strings (`List[str]`), never a single string
+- Each array element is one step line (without the keyword prefix — e.g., write `"I am on..."` not `"Given I am on..."`)
+- An empty step type uses an empty array `[]`, not `""`
+
 **IMPORTANT:** Output ONLY the raw JSON matching the `GherkinFeature` schema. No markdown fences, no explanation text before or after.

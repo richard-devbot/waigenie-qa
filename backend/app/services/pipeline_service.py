@@ -1,4 +1,3 @@
-import traceback
 from typing import Dict, Any, Optional
 import uuid
 import asyncio
@@ -271,9 +270,8 @@ class PipelineService:
             )
             
         except Exception as e:
-            logger.error(f"Pipeline failed with error: {str(e)}")
-            logger.error(traceback.format_exc())
-            
+            logger.error("Pipeline failed", exc_info=True)
+
             self.task_manager.set_task_status(
                 task_id,
                 "FAILED",
@@ -282,7 +280,6 @@ class PipelineService:
                     "current_stage": "FAILED",
                     "message": f"Pipeline failed: {str(e)}",
                     "error": str(e),
-                    "traceback": traceback.format_exc(),
                     "results": results  # Include partial results
                 }
             )
@@ -376,24 +373,28 @@ class PipelineService:
                         # Only add default URL if we can't extract a meaningful one
                         scenario_lines.append(f"  Given I am on \"https://example.com\"")
                 
-                # Add When step
+                # Add When step(s)
                 if 'when' in scenario and scenario['when']:
-                    scenario_lines.append(f"  When {scenario['when']}")
-                
-                # Add Then step
+                    when_steps = scenario['when'] if isinstance(scenario['when'], list) else [scenario['when']]
+                    for step in when_steps:
+                        scenario_lines.append(f"  When {step}")
+
+                # Add Then step(s)
                 if 'then' in scenario and scenario['then']:
-                    scenario_lines.append(f"  Then {scenario['then']}")
-                
+                    then_steps = scenario['then'] if isinstance(scenario['then'], list) else [scenario['then']]
+                    for step in then_steps:
+                        scenario_lines.append(f"  Then {step}")
+
                 # Add And steps if present
                 if 'and' in scenario and scenario['and']:
                     and_steps = scenario['and'] if isinstance(scenario['and'], list) else [str(scenario['and'])]
                     for and_step in and_steps:
                         scenario_lines.append(f"  And {and_step}")
-                
+
                 # Add But step if present
                 if 'but' in scenario and scenario['but']:
                     scenario_lines.append(f"  But {scenario['but']}")
-                
+
                 formatted_scenarios.append('\n'.join(scenario_lines))
         
         result = "\n\n".join(formatted_scenarios)
@@ -499,24 +500,28 @@ class PipelineService:
                 # Only add default URL if we can't extract a meaningful one
                 scenario_lines.append(f"  Given I am on \"https://example.com\"")
         
-        # Add When step
+        # Add When step(s)
         if 'when' in scenario and scenario['when']:
-            scenario_lines.append(f"  When {scenario['when']}")
-        
-        # Add Then step
+            when_steps = scenario['when'] if isinstance(scenario['when'], list) else [scenario['when']]
+            for step in when_steps:
+                scenario_lines.append(f"  When {step}")
+
+        # Add Then step(s)
         if 'then' in scenario and scenario['then']:
-            scenario_lines.append(f"  Then {scenario['then']}")
-        
+            then_steps = scenario['then'] if isinstance(scenario['then'], list) else [scenario['then']]
+            for step in then_steps:
+                scenario_lines.append(f"  Then {step}")
+
         # Add And steps if present
         if 'and' in scenario and scenario['and']:
             and_steps = scenario['and'] if isinstance(scenario['and'], list) else [str(scenario['and'])]
             for and_step in and_steps:
                 scenario_lines.append(f"  And {and_step}")
-        
+
         # Add But step if present
         if 'but' in scenario and scenario['but']:
             scenario_lines.append(f"  But {scenario['but']}")
-        
+
         return '\n'.join(scenario_lines)
     
     def _simplify_history_data(self, history_data: Dict[str, Any]) -> Dict[str, Any]:
