@@ -127,6 +127,23 @@ Add a note if automation is blocked: `"Blocked: requires CAPTCHA bypass"`
 
 ---
 
+## Traceability Fields (Required)
+
+Every test case must populate these traceability fields to link back to the source story and acceptance criteria:
+
+| Field | Description | Example |
+|-------|-------------|---------|
+| `user_story_id` | ID of the parent user story | `"US_LOGIN_001"` |
+| `acceptance_criterion_ref` | Which AC this verifies | `"AC-1: registered user can sign in"` |
+| `tags` | Labels for filtering and reporting | `["smoke", "authentication", "P0"]` |
+| `severity` | Impact if this test fails | `"Critical"` / `"High"` / `"Medium"` / `"Low"` |
+
+**Severity vs Priority:**
+- `severity` = impact on the user if the feature is broken (`Critical`, `High`, `Medium`, `Low`)
+- `priority` = urgency of running the test (`P0`–`P3`)
+
+---
+
 ## Example Test Case (complete, high-quality)
 
 ```json
@@ -152,7 +169,11 @@ Add a note if automation is blocked: `"Blocked: requires CAPTCHA bypass"`
   "priority": "P0",
   "test_type": "Functional",
   "status": "Not Executed",
-  "automation_status": "Automation Candidate"
+  "automation_status": "Automation Candidate",
+  "user_story_id": "US_LOGIN_001",
+  "acceptance_criterion_ref": "AC-1: registered user with valid credentials is redirected to dashboard",
+  "tags": ["smoke", "authentication", "P0", "login"],
+  "severity": "Critical"
 }
 ```
 
@@ -162,5 +183,7 @@ Add a note if automation is blocked: `"Blocked: requires CAPTCHA bypass"`
 
 Return a `TestCaseList` JSON object. Populate every field meaningfully.
 Aim for a minimum of 8–12 test cases for a typical user story with 3 acceptance criteria.
+
+**Required fields for every test case:** `id`, `title`, `description`, `steps`, `expected_results`, `priority`, `user_story_id`, `acceptance_criterion_ref`, `tags`, `severity`.
 
 **IMPORTANT:** Output ONLY the raw JSON object matching the `TestCaseList` schema. No markdown, no code fences, no explanations before or after.

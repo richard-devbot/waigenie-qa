@@ -58,9 +58,9 @@ class GherkinScenario(BaseModel):
     title: str
     tags: List[str] = Field(default_factory=list)
     feature: str = ""
-    given: Union[str, List[str]] = ""
-    when: Union[str, List[str]] = ""
-    then: Union[str, List[str]] = ""
+    given: List[str] = Field(default_factory=list)
+    when: List[str] = Field(default_factory=list)
+    then: List[str] = Field(default_factory=list)
     and_steps: List[str] = Field(default_factory=list, alias="and")
     but: str = ""
     background: str = ""
